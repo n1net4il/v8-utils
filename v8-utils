@@ -1,0 +1,33 @@
+#!/bin/bash
+if [ "$#" -lt 1 ] || ([ $1 != "build" ] && [ $1 != "checkout" ] && [ $1 != "patch" ]); then
+    echo "Usage: v8-utils [build / checkout / patch] <options>"
+else
+    if [ $1 == "build" ]; then
+        if [ "$#" -lt 2 ] || ([ $2 != "release" ] && [ $2 != "debug" ] ); then
+            echo "Usage: v8-utils build [release / debug]"
+        else
+            pushd $V8_PATH
+            tools/dev/gm.py x64.$2
+            popd
+            rm -rf $2
+            cp -rf $V8_PATH/out/x64.$2 $2
+        fi
+    elif [ $1 == "checkout" ]; then
+        if [ "$#" -lt 2 ]; then
+            echo "Usage: v8-utils checkout <commit / branch>"
+        else
+            pushd $V8_PATH
+            git reset --hard HEAD
+            git checkout $2
+            gclient sync
+            build/install-build-deps.sh
+            popd
+        fi
+    elif [ $1 == "patch" ]; then
+        if [ "$#" -lt 2 ]; then
+            echo "Usage: v8-utils patch <filename>"
+        else
+            patch -d $V8_PATH -p1 < $2
+        fi
+    fi
+fi
